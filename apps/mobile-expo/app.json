@@ -1,0 +1,63 @@
+{
+  "expo": {
+    "name": "SAT TELECOM",
+    "slug": "provedor-sat",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "provedorsat",
+    "icon": "./assets/logo-quadrada.jpeg",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.provedorsat.cliente"
+    },
+    "android": {
+      "package": "com.provedorsat.cliente",
+      "adaptiveIcon": {
+        "backgroundColor": "#0B1F3A",
+        "foregroundImage": "./assets/logo-quadrada.jpeg"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/logo-quadrada.jpeg"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/logo-quadrada.jpeg",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#0B1F3A"
+        }
+      ],
+      "expo-secure-store",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Use o Face ID para desbloquear o app e acessar sua conta com segurança."
+        }
+      ],
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/logo-quadrada.jpeg",
+          "color": "#0B1F3A",
+          "defaultChannel": "default"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {}
+    }
+  }
+}
