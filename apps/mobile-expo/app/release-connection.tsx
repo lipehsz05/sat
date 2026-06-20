@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
-import { Stack } from 'expo-router';
+import { StackScreenTitle } from '@/components/navigation/StackScreenTitle';
 import { releaseConnection } from '@/lib/api-contract';
 import { Button, Card } from '@/components/ui/Button';
 import type { AppColors } from '@/constants/theme';
@@ -43,7 +43,7 @@ export default function ReleaseConnectionScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Liberar conexão' }} />
+      <StackScreenTitle title="Liberar conexão" />
       <View style={styles.container}>
         <Card>
           <Text style={styles.title}>Liberar conexão temporariamente</Text>

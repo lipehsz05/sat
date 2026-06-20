@@ -7,8 +7,8 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack } from 'expo-router';
-import { formatCurrency, getTaxNotes } from '@/lib/api-contract';
+import { StackScreenTitle } from '@/components/navigation/StackScreenTitle';
+import { getTaxNotes } from '@/lib/api-contract';
 import type { ServiceLocation, TaxNote } from '@/lib/api-contract';
 import { ExpandableTaxNotesLocation } from '@/components/ui/ExpandableTaxNotesLocation';
 import { PaginationBar } from '@/components/ui/PaginationBar';
@@ -86,10 +86,7 @@ export default function TaxNotesScreen() {
     });
   }, [pageGroups]);
 
-  const summary = useMemo(() => {
-    const total = notes.reduce((sum, n) => sum + n.amount, 0);
-    return { count: notes.length, total };
-  }, [notes]);
+  const summary = useMemo(() => ({ count: notes.length }), [notes]);
 
   const toggleLocation = (locationId: string) => {
     setExpandedId((current) => (current === locationId ? null : locationId));
@@ -97,7 +94,7 @@ export default function TaxNotesScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Notas fiscais' }} />
+      <StackScreenTitle title="Notas fiscais" />
       {authLoading || loading ? (
         <View style={styles.center}>
           <ActivityIndicator color={colors.accent} size="large" />
@@ -123,13 +120,6 @@ export default function TaxNotesScreen() {
                 <Text style={styles.summaryLabel}>
                   {summary.count === 1 ? 'Nota disponível' : 'Notas disponíveis'}
                 </Text>
-              </View>
-              <View style={styles.summaryDivider} />
-              <View style={styles.summaryItem}>
-                <Text style={[styles.summaryValue, styles.summaryValueAccent]}>
-                  {formatCurrency(summary.total)}
-                </Text>
-                <Text style={styles.summaryLabel}>Valor total emitido</Text>
               </View>
             </View>
           ) : null}
@@ -213,30 +203,21 @@ function createTaxNotesStyles(colors: AppColors) {
       lineHeight: 20,
     },
     summaryCard: {
-      flexDirection: 'row',
       backgroundColor: colors.surface,
       borderRadius: radius.lg,
       padding: spacing.lg,
       marginBottom: spacing.lg,
       borderWidth: 1,
       borderColor: colors.border,
-    },
-    summaryItem: {
-      flex: 1,
       alignItems: 'center',
     },
-    summaryDivider: {
-      width: 1,
-      backgroundColor: colors.border,
-      marginHorizontal: spacing.sm,
+    summaryItem: {
+      alignItems: 'center',
     },
     summaryValue: {
       fontSize: typography.title,
       fontWeight: '800',
       color: colors.primary,
-    },
-    summaryValueAccent: {
-      color: colors.accent,
     },
     summaryLabel: {
       fontSize: typography.label,

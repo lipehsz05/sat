@@ -20,6 +20,7 @@ import {
   syncAllNotifications,
 } from '@/lib/notifications';
 import { addToInbox, markAllInboxRead, markInboxRead, markNotificationSent } from '@/lib/notifications/storage';
+import { normalizeNotificationRoute, NOTIFICATIONS_SCREEN } from '@/lib/notifications/routes';
 
 interface NotificationContextValue {
   inbox: AppNotification[];
@@ -44,16 +45,21 @@ const defaultPrefs: NotificationPreferences = {
 const NotificationContext = createContext<NotificationContextValue | null>(null);
 
 function navigateFromRoute(route?: string) {
-  if (!route) return;
-  if (route.startsWith('/invoice/')) {
-    router.push(route as `/invoice/${string}`);
+  const normalized = normalizeNotificationRoute(route);
+  if (!normalized) return;
+  if (normalized.startsWith('/invoice/')) {
+    router.push(normalized as `/invoice/${string}`);
     return;
   }
-  if (route === '/(tabs)' || route === '/(tabs)/') {
+  if (normalized === '/(tabs)' || normalized === '/(tabs)/') {
     router.push('/(tabs)');
     return;
   }
-  router.push(route as never);
+  if (normalized === NOTIFICATIONS_SCREEN) {
+    router.push(NOTIFICATIONS_SCREEN);
+    return;
+  }
+  router.push(normalized as never);
 }
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {

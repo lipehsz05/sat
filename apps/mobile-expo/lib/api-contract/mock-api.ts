@@ -11,6 +11,7 @@ import {
 import { groupInvoicesByLocation } from './location-helpers';
 import type {
   AuthSession,
+  FirstAccessContact,
   Invoice,
   InvoicesByLocation,
   NegotiationResult,
@@ -61,7 +62,10 @@ function findUserByDocument(document: string): UserProfile | undefined {
   return registeredUsers.get(digits)?.profile;
 }
 
-function buildRegisteredProfile(document: string, email: string): UserProfile {
+function buildRegisteredProfile(
+  document: string,
+  contact: { email: string; phone: string },
+): UserProfile {
   const digits = stripDocument(document);
   const isCnpj = digits.length === 14;
   return {
@@ -69,8 +73,8 @@ function buildRegisteredProfile(document: string, email: string): UserProfile {
     name: isCnpj ? 'Nova empresa' : 'Novo cliente',
     document: digits,
     documentType: isCnpj ? 'cnpj' : 'cpf',
-    email,
-    phone: '',
+    email: contact.email,
+    phone: contact.phone,
     address: MOCK_USER.address,
     locations: [],
   };
@@ -105,7 +109,7 @@ export async function login(document: string, password: string): Promise<AuthSes
 
 export async function registerFirstAccess(
   document: string,
-  email: string,
+  contact: FirstAccessContact,
   password: string,
 ): Promise<void> {
   const digits = stripDocument(document);
@@ -115,8 +119,10 @@ export async function registerFirstAccess(
   if (password.length < 6) {
     throw new Error('A senha deve ter pelo menos 6 caracteres.');
   }
-  const profile = buildRegisteredProfile(document, email);
-  registeredUsers.set(digits, { email, password, profile });
+  const email = contact.channel === 'email' ? contact.email.trim() : '';
+  const phone = contact.channel === 'whatsapp' ? stripDocument(contact.phone) : '';
+  const profile = buildRegisteredProfile(document, { email, phone });
+  registeredUsers.set(digits, { email, phone, password, profile });
   pendingRegistrations.delete(digits);
   return delayWrite(undefined);
 }

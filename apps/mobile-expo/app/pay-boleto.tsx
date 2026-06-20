@@ -9,7 +9,8 @@ import {
   View,
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
+import { StackScreenTitle } from '@/components/navigation/StackScreenTitle';
 import {
   formatBoletoLinhaDigitavel,
   formatCurrency,
@@ -150,7 +151,7 @@ export default function PayBoletoScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: isBulk ? 'Boleto consolidado' : 'Boleto bancário' }} />
+      <StackScreenTitle title={isBulk ? 'Boleto consolidado' : 'Boleto bancário'} />
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.slip}>
           <View style={styles.slipHeader}>

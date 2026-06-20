@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Stack } from 'expo-router';
+import { StackScreenTitle } from '@/components/navigation/StackScreenTitle';
 import { reportProblem } from '@/lib/api-contract';
 import type { ReportProblemPayload } from '@/lib/api-contract';
 import { Button, Input } from '@/components/ui/Button';
@@ -56,7 +56,7 @@ export default function ReportProblemScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Reportar problema' }} />
+      <StackScreenTitle title="Reportar problema" />
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.label}>Tipo do problema</Text>
         <View style={styles.types}>

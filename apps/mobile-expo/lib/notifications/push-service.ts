@@ -6,6 +6,7 @@ import { formatCurrency, formatDate } from '@/lib/api-contract';
 import { findLocation } from '@/lib/api-contract/location-helpers';
 import { getOpenInvoicesByLocation, getProfile } from '@/lib/api-contract';
 import { MOCK_PROMOTIONS } from './promotions';
+import { NOTIFICATIONS_SCREEN } from './routes';
 import { addToInbox, loadSentNotificationIds, markNotificationSent, savePushToken } from './storage';
 import type { AppNotification, NotificationCategory, NotificationPreferences } from './types';
 import { loadNotificationPreferences } from './preferences';
@@ -332,7 +333,7 @@ export async function sendTestNotification(): Promise<void> {
       title: 'Teste de notificação',
       body: 'No celular você também receberá alertas na bandeja do sistema.',
       createdAt: new Date().toISOString(),
-      route: '/(tabs)/settings',
+      route: NOTIFICATIONS_SCREEN,
     });
     return;
   }
@@ -341,7 +342,7 @@ export async function sendTestNotification(): Promise<void> {
     content: {
       title: 'SAT TELECOM',
       body: 'Notificações ativas! Você será avisado sobre faturas e promoções.',
-      data: { route: '/notifications/index' },
+      data: { route: NOTIFICATIONS_SCREEN },
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,

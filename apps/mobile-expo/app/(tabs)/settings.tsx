@@ -5,7 +5,6 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
-  Switch,
   Text,
   TouchableOpacity,
   View,
@@ -19,11 +18,13 @@ import {
   setBiometricPreferenceEnabled,
 } from '@/lib/biometric';
 import { Button, Card, Input } from '@/components/ui/Button';
+import { PreferenceSwitch } from '@/components/ui/PreferenceSwitch';
 import type { AppColors } from '@/constants/theme';
 import { spacing, typography } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { useBiometric } from '@/context/BiometricContext';
 import { useLocationDisplayName, useLocationLabels } from '@/context/LocationLabelsContext';
+import { useHomeLayout, type HomeLayoutVariant } from '@/context/HomeLayoutContext';
 import { useTheme } from '@/context/ThemeContext';
 import { EditLocationNameModal } from '@/components/ui/EditLocationNameModal';
 import type { ServiceLocation } from '@/lib/api-contract';
@@ -70,6 +71,7 @@ export default function SettingsScreen() {
   const { session, profile, signOut } = useAuth();
   const { refreshBiometricPreference, markUnlockedThisSession } = useBiometric();
   const { colors, isDark, setMode } = useTheme();
+  const { variant: homeLayout, setVariant: setHomeLayout } = useHomeLayout();
   const {
     preferences: notifPrefs,
     setPreferences: setNotifPrefs,
@@ -77,6 +79,7 @@ export default function SettingsScreen() {
   } = useNotifications();
   const styles = useThemedStyles(createSettingsStyles);
   const [biometric, setBiometric] = useState(false);
+  const [biometricBusy, setBiometricBusy] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -86,35 +89,47 @@ export default function SettingsScreen() {
 
   useEffect(() => {
     (async () => {
-      setBiometric(await isBiometricPreferenceEnabled());
-      await refreshPreferences();
-    })();
-  }, [refreshPreferences]);
-
-  const toggleBiometric = async (value: boolean) => {
-    if (Platform.OS === 'web') {
-      Alert.alert('Indisponível', 'Biometria não está disponível na versão web.');
-      return;
-    }
-    if (value) {
-      const { ok, reason } = await enableBiometricWithVerification();
-      if (!ok) {
-        if (reason === 'unavailable') {
-          Alert.alert(
-            'Biometria indisponível',
-            'Seu dispositivo não possui biometria ou senha do aparelho configurada.',
-          );
-        }
+      if (!session?.userId) {
+        setBiometric(false);
         return;
       }
-      setBiometric(true);
-      markUnlockedThisSession();
+      setBiometric(await isBiometricPreferenceEnabled(session.userId));
+      await refreshPreferences();
+    })();
+  }, [session?.userId, refreshPreferences]);
+
+  const toggleBiometric = async (value: boolean) => {
+    if (Platform.OS === 'web' || biometricBusy || !session?.userId) return;
+
+    setBiometricBusy(true);
+    try {
+      if (value) {
+        const { ok, reason } = await enableBiometricWithVerification(session.userId);
+        if (!ok) {
+          if (reason === 'unavailable') {
+            Alert.alert(
+              'Biometria indisponível',
+              'Configure biometria ou senha do aparelho nas configurações do dispositivo.',
+            );
+          } else if (reason === 'storage') {
+            Alert.alert(
+              'Erro ao salvar',
+              'Não foi possível salvar a preferência. Tente novamente.',
+            );
+          }
+          return;
+        }
+        setBiometric(true);
+        markUnlockedThisSession();
+        await refreshBiometricPreference();
+        return;
+      }
+      setBiometric(false);
+      await setBiometricPreferenceEnabled(session.userId, false);
       await refreshBiometricPreference();
-      return;
+    } finally {
+      setBiometricBusy(false);
     }
-    setBiometric(false);
-    await setBiometricPreferenceEnabled(false);
-    await refreshBiometricPreference();
   };
 
   const handleChangePassword = async () => {
@@ -187,38 +202,54 @@ export default function SettingsScreen() {
 
         <Card style={styles.section}>
           <Text style={styles.sectionTitle}>Preferências</Text>
+          <Text style={styles.layoutLabel}>Visual da home</Text>
+          <View style={styles.layoutPicker}>
+            {(['classic', 'dashboard'] as HomeLayoutVariant[]).map((option) => {
+              const active = homeLayout === option;
+              return (
+                <TouchableOpacity
+                  key={option}
+                  style={[styles.layoutOption, active && styles.layoutOptionActive]}
+                  onPress={() => void setHomeLayout(option)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                >
+                  <Text style={[styles.layoutOptionText, active && styles.layoutOptionTextActive]}>
+                    {option === 'classic' ? 'Clássico' : 'Dashboard'}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
           <View style={styles.row}>
             <Text style={styles.rowLabel}>Modo escuro</Text>
-            <Switch
+            <PreferenceSwitch
               value={isDark}
               onValueChange={(v) => setMode(v ? 'dark' : 'light')}
-              trackColor={{ true: colors.primaryMid }}
+              activeColor={colors.primaryMid}
             />
           </View>
           <View style={styles.row}>
             <Text style={styles.rowLabel}>Notificações</Text>
-            <Switch
+            <PreferenceSwitch
               value={notifPrefs.enabled}
               onValueChange={(v) => void setNotifPrefs({ enabled: v })}
-              trackColor={{ true: colors.primary }}
             />
           </View>
           {notifPrefs.enabled ? (
             <>
               <View style={[styles.row, styles.subRow]}>
                 <Text style={styles.rowLabel}>Faturas e vencimentos</Text>
-                <Switch
+                <PreferenceSwitch
                   value={notifPrefs.invoiceReminders}
                   onValueChange={(v) => void setNotifPrefs({ invoiceReminders: v })}
-                  trackColor={{ true: colors.primary }}
                 />
               </View>
               <View style={[styles.row, styles.subRow]}>
                 <Text style={styles.rowLabel}>Promoções e novidades</Text>
-                <Switch
+                <PreferenceSwitch
                   value={notifPrefs.promotions}
                   onValueChange={(v) => void setNotifPrefs({ promotions: v })}
-                  trackColor={{ true: colors.primary }}
                 />
               </View>
               {Platform.OS !== 'web' ? (
@@ -233,11 +264,10 @@ export default function SettingsScreen() {
           ) : null}
           <View style={styles.row}>
             <Text style={styles.rowLabel}>Entrar com biometria</Text>
-            <Switch
+            <PreferenceSwitch
               value={biometric}
               onValueChange={toggleBiometric}
-              trackColor={{ true: colors.primary }}
-              disabled={Platform.OS === 'web'}
+              disabled={Platform.OS === 'web' || biometricBusy}
             />
           </View>
         </Card>
@@ -319,6 +349,38 @@ function createSettingsStyles(colors: AppColors) {
       fontSize: typography.body,
       color: colors.text,
       flex: 1,
+    },
+    layoutLabel: {
+      fontSize: typography.body,
+      color: colors.text,
+      marginBottom: spacing.sm,
+    },
+    layoutPicker: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      marginBottom: spacing.md,
+    },
+    layoutOption: {
+      flex: 1,
+      minHeight: 44,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.background,
+    },
+    layoutOptionActive: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primary + '12',
+    },
+    layoutOptionText: {
+      fontSize: typography.label,
+      fontWeight: '600',
+      color: colors.textSecondary,
+    },
+    layoutOptionTextActive: {
+      color: colors.primary,
     },
     subRow: {
       paddingLeft: spacing.md,

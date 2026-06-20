@@ -78,6 +78,27 @@ export function isValidDocument(value: string): boolean {
   return false;
 }
 
+export function formatPhone(value: string): string {
+  const digits = stripDocument(value).slice(0, 11);
+  if (digits.length <= 2) return digits.length ? `(${digits}` : '';
+  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  if (digits.length <= 10) {
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  }
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+}
+
+export function isValidPhone(value: string): boolean {
+  const digits = stripDocument(value);
+  if (digits.length === 10) return digits[2] >= '2';
+  if (digits.length === 11) return digits[2] === '9';
+  return false;
+}
+
+export function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
+
 export function formatAddress(address: {
   street: string;
   number: string;

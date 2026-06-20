@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, router, useLocalSearchParams, type Href } from 'expo-router';
+import { router, useLocalSearchParams, type Href } from 'expo-router';
+import { StackScreenTitle } from '@/components/navigation/StackScreenTitle';
 import {
   formatAddressShort,
   formatCompetence,
@@ -98,7 +99,7 @@ export default function TaxNoteDetailScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: `NF ${note.number}` }} />
+      <StackScreenTitle title={`NF ${note.number}`} />
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.document}>
           <View style={styles.documentHeader}>

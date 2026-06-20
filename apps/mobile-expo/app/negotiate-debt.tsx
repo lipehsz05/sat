@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Stack } from 'expo-router';
+import { StackScreenTitle } from '@/components/navigation/StackScreenTitle';
 import { Ionicons } from '@expo/vector-icons';
 import {
   formatCurrency,
@@ -276,7 +276,7 @@ export default function NegotiateDebtScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Negociar débitos' }} />
+      <StackScreenTitle title="Negociar débitos" />
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Parcelamento de débitos</Text>
         <Text style={styles.subtitle}>

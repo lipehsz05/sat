@@ -7,9 +7,10 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { InteractionManager, Platform } from 'react-native';
+import { Platform } from 'react-native';
 import { BiometricLockOverlay } from '@/components/BiometricLockOverlay';
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/context/ToastContext';
 import {
   authenticateForAppUnlock,
   getBiometricLabel,
@@ -27,8 +28,11 @@ interface BiometricContextValue {
 
 const BiometricContext = createContext<BiometricContextValue | null>(null);
 
+const AUTH_TIMEOUT_MS = 60_000;
+
 export function BiometricProvider({ children }: { children: React.ReactNode }) {
   const { session, isLoading: authLoading } = useAuth();
+  const { showToast } = useToast();
   const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
   const [prefLoaded, setPrefLoaded] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
@@ -39,13 +43,18 @@ export function BiometricProvider({ children }: { children: React.ReactNode }) {
   const coldStartPromptDoneRef = useRef(false);
 
   const refreshBiometricPreference = useCallback(async () => {
-    const enabled = await isBiometricPreferenceEnabled();
+    if (!session?.userId) {
+      setIsBiometricEnabled(false);
+      setPrefLoaded(true);
+      return;
+    }
+    const enabled = await isBiometricPreferenceEnabled(session.userId);
     setIsBiometricEnabled(enabled);
     setPrefLoaded(true);
     if (Platform.OS !== 'web' && enabled) {
       setBiometricLabel(await getBiometricLabel());
     }
-  }, []);
+  }, [session?.userId]);
 
   const markUnlockedThisSession = useCallback(() => {
     unlockedThisSessionRef.current = true;
@@ -53,6 +62,7 @@ export function BiometricProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    setPrefLoaded(false);
     void refreshBiometricPreference();
   }, [refreshBiometricPreference]);
 
@@ -66,26 +76,38 @@ export function BiometricProvider({ children }: { children: React.ReactNode }) {
     unlockingRef.current = true;
     setIsAuthenticating(true);
 
+    const timeoutId = setTimeout(() => {
+      unlockingRef.current = false;
+      setIsAuthenticating(false);
+    }, AUTH_TIMEOUT_MS);
+
     try {
-      await new Promise<void>((resolve) => {
-        InteractionManager.runAfterInteractions(() => resolve());
-      });
+      // Pequena pausa para o overlay montar antes do prompt nativo
+      await new Promise<void>((resolve) => setTimeout(resolve, 150));
 
       const promptMessage =
         Platform.OS === 'ios'
-          ? `Use ${biometricLabel} para continuar`
+          ? `Use ${biometricLabel} ou a senha do aparelho`
           : 'Desbloqueie com biometria ou senha do aparelho';
       const result = await authenticateForAppUnlock(promptMessage);
 
       if (result.success) {
         unlockedThisSessionRef.current = true;
         setIsLocked(false);
+        return;
       }
+
+      if (result.error !== 'user_cancel' && result.error !== 'system_cancel') {
+        showToast('Não foi possível autenticar. Tente novamente.', 'error');
+      }
+    } catch {
+      showToast('Não foi possível autenticar. Tente novamente.', 'error');
     } finally {
+      clearTimeout(timeoutId);
       unlockingRef.current = false;
       setIsAuthenticating(false);
     }
-  }, [isBiometricEnabled, session, biometricLabel]);
+  }, [isBiometricEnabled, session, biometricLabel, showToast]);
 
   /** Face ID só na abertura do app — não ao voltar do background ou notificações */
   useEffect(() => {
@@ -105,8 +127,7 @@ export function BiometricProvider({ children }: { children: React.ReactNode }) {
 
     coldStartPromptDoneRef.current = true;
     setIsLocked(true);
-    void attemptUnlock();
-  }, [authLoading, prefLoaded, session, isBiometricEnabled, attemptUnlock]);
+  }, [authLoading, prefLoaded, session, isBiometricEnabled]);
 
   useEffect(() => {
     if (!session) {

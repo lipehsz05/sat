@@ -1,3 +1,4 @@
+export * from './routes';
 export * from './types';
 export * from './labels';
 export * from './preferences';

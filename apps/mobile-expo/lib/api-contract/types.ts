@@ -1,5 +1,11 @@
 export type DocumentType = 'cpf' | 'cnpj';
 
+export type FirstAccessChannel = 'email' | 'whatsapp';
+
+export type FirstAccessContact =
+  | { channel: 'email'; email: string }
+  | { channel: 'whatsapp'; phone: string };
+
 export interface Address {
   street: string;
   number: string;

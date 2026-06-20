@@ -300,10 +300,13 @@ export const MOCK_TAX_NOTES: TaxNote[] = [
   ...historical.taxNotes,
 ];
 
-export const pendingRegistrations = new Map<string, { email: string; verified: boolean }>();
+export const pendingRegistrations = new Map<
+  string,
+  { email: string; phone: string; verified: boolean }
+>();
 
 /** Usuários criados via primeiro acesso (mock em memória) */
 export const registeredUsers = new Map<
   string,
-  { email: string; password: string; profile: UserProfile }
+  { email: string; phone: string; password: string; profile: UserProfile }
 >();

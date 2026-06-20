@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Stack, router, useLocalSearchParams, type Href } from 'expo-router';
+import { router, useLocalSearchParams, type Href } from 'expo-router';
+import { StackScreenTitle } from '@/components/navigation/StackScreenTitle';
 import { formatCurrency, formatDate, formatAddressShort, formatReferenceMonth, findLocation, getInvoiceById, getTaxNoteByInvoiceId } from '@/lib/api-contract';
 import type { Invoice, ServiceLocation, TaxNote } from '@/lib/api-contract';
 import { Button } from '@/components/ui/Button';
@@ -94,7 +95,7 @@ export default function InvoiceDetailScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: `Fatura ${formatReferenceMonth(invoice.referenceMonth)}` }} />
+      <StackScreenTitle title={`Fatura ${formatReferenceMonth(invoice.referenceMonth)}`} />
       <ScrollView contentContainerStyle={styles.container}>
         {location ? <InvoiceLocationBox location={location} /> : null}
         <Text style={styles.amount}>{formatCurrency(invoice.amount)}</Text>

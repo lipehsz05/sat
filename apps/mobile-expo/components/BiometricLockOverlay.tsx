@@ -25,7 +25,7 @@ export function BiometricLockOverlay({
         <BrandLogo variant="onDark" size="auth" />
         <Text style={styles.title}>App bloqueado</Text>
         <Text style={styles.subtitle}>
-          Use {biometricLabel} para acessar sua conta com segurança.
+          Use {biometricLabel} ou a senha do aparelho para acessar sua conta com segurança.
         </Text>
         <Button
           title="Desbloquear"

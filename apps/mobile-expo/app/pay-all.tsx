@@ -7,7 +7,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Stack, router } from 'expo-router';
+import { router } from 'expo-router';
+import { StackScreenTitle } from '@/components/navigation/StackScreenTitle';
 import QRCode from 'react-native-qrcode-svg';
 import {
   formatAddressShort,
@@ -102,7 +103,7 @@ export default function PayAllScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Pagar todas' }} />
+      <StackScreenTitle title="Pagar todas" />
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Pagamento consolidado</Text>
         <Text style={styles.subtitle}>

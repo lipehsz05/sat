@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { ActivityIndicator } from 'react-native';
+import { ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -7,35 +8,32 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { SafeScreen } from '@/components/ui/SafeScreen';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { BiometricProvider } from '@/context/BiometricContext';
+import { HomeLayoutProvider } from '@/context/HomeLayoutContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { LocationLabelsGate } from '@/components/LocationLabelsGate';
 import { NotificationProvider } from '@/context/NotificationContext';
 import { ToastProvider } from '@/context/ToastContext';
+import { useStackScreenOptions } from '@/hooks/useStackScreenOptions';
+import { buildNavigationTheme } from '@/lib/navigation-theme';
 
 SplashScreen.preventAutoHideAsync();
 
 function RootNavigator() {
   const { isLoading } = useAuth();
-  const { colors, isDark } = useTheme();
-
-  useEffect(() => {
-    if (!isLoading) {
-      SplashScreen.hideAsync().catch(() => {});
-    }
-  }, [isLoading]);
-
-  const headerOptions = useMemo(
-    () => ({
-      headerStyle: { backgroundColor: colors.surface },
-      headerTintColor: colors.primary,
-      headerTitleStyle: { color: colors.text, fontWeight: '600' as const },
-      headerShadowVisible: false,
-      contentStyle: { backgroundColor: colors.background },
-    }),
-    [colors],
+  const { colors, isDark, isReady } = useTheme();
+  const headerOptions = useStackScreenOptions();
+  const navigationTheme = useMemo(
+    () => buildNavigationTheme(colors, isDark),
+    [colors, isDark],
   );
 
-  if (isLoading) {
+  useEffect(() => {
+    if (!isLoading && isReady) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [isLoading, isReady]);
+
+  if (!isReady || isLoading) {
     return (
       <SafeScreen style={{ backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' }}>
         <ActivityIndicator size="large" color={colors.accent} />
@@ -44,7 +42,7 @@ function RootNavigator() {
   }
 
   return (
-    <>
+    <NavigationThemeProvider value={navigationTheme}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerShown: false, ...headerOptions }}>
         <Stack.Screen name="index" />
@@ -91,7 +89,7 @@ function RootNavigator() {
           options={{ headerShown: true, title: 'Notificações', headerBackTitle: 'Voltar' }}
         />
       </Stack>
-    </>
+    </NavigationThemeProvider>
   );
 }
 
@@ -99,6 +97,7 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
+        <HomeLayoutProvider>
         <AuthProvider>
           <ToastProvider>
             <NotificationProvider>
@@ -110,6 +109,7 @@ export default function RootLayout() {
             </NotificationProvider>
           </ToastProvider>
         </AuthProvider>
+        </HomeLayoutProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );

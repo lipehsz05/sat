@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Stack, router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
+import { StackScreenTitle } from '@/components/navigation/StackScreenTitle';
 import { formatCurrency, formatReferenceMonth, getInvoiceById, getInvoicesByIds } from '@/lib/api-contract';
 import type { Invoice } from '@/lib/api-contract';
 import { Button, Input } from '@/components/ui/Button';
@@ -100,8 +101,9 @@ export default function PayCardScreen() {
 
   return (
     <>
-      <Stack.Screen
-        options={{ title: isBulk ? 'Pagar todas com cartão' : 'Pagar com cartão' }}
+      <StackScreenTitle
+        title={isBulk ? 'Pagar todas com cartão' : 'Pagar com cartão'}
+        options={{ presentation: 'modal', headerBackTitle: 'Fechar' }}
       />
       <ScrollView contentContainerStyle={styles.container}>
         {invoices.length > 0 ? (
